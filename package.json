@@ -1,0 +1,20 @@
+{
+  "name": "gameoff",
+  "module": "index.ts",
+  "type": "module",
+  "scripts": {
+    "watch": "npx nodemon -x npm run dev -e ts",
+    "dev": "grun ~/.bun/bin/bun run index.ts & npx http-server -c-1 -p 3000 dist/"
+  },
+  "devDependencies": {
+    "bun-types": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@types/ramda": "^0.29.7",
+    "kaboom": "^3000.1.13",
+    "ramda": "^0.29.1"
+  }
+}
