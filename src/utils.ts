@@ -1,7 +1,6 @@
 import { GameObj, PosComp, Vec2 } from "kaboom"
-import { SmoothComp } from "./hud"
 
- const pipe = <t, T extends nF<t>>()=>pip<t,T,t>([])
+const pipe = <t, T extends nF<t>>()=>pip<t,T,t>([])
 
 type nF<T> = T extends Function? never: T
 type F<arg,out> = (a: arg) => out
@@ -25,9 +24,17 @@ export const fg = <T>(func: (arg:T)=>any)=>(arg:T)=>{
 }
 export const map = <T,Tmapped>(func: (arg:T)=>Tmapped)=>(arr: T[])=>arr.map(func)
 
+export const getset = <Name extends string,T>(name: Name, getter: ()=>T, setter:(a:T)=>T): {[p in Name]: T}=>({
+  get [name]() {return getter()},
+  set [name](v: T) {setter(v)}
+}) as {[p in Name]: T}
+
 export const addChild = (child: GameObj)=>f((obj: GameObj)=>obj.add(child))
 export const addChildren = (children: GameObj[])=>f((parent: GameObj)=>map(parent.add)(children))
+/*
+ * if add named children breaks
+ * try change the spread at the end to Object.assign
+*/
 export const addNamedChildren = <struct extends Record<string, GameObj>>(children: struct)=>fg(<T extends GameObj>(parent: T): T & struct=>({...addChildren(Object.values(children))(parent), ...children}))
 
 export const moveTo = (where: Vec2)=><Obj extends GameObj<PosComp>>(obj: Obj)=>obj.moveTo(where)
-export const smoothTo = (where: Vec2)=><Obj extends GameObj<SmoothComp>>(obj: Obj)=>obj.smoothMoveTo(where)
