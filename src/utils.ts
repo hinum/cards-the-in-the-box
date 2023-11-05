@@ -24,10 +24,7 @@ export const fg = <T>(func: (arg:T)=>any)=>(arg:T)=>{
 }
 export const map = <T,Tmapped>(func: (arg:T)=>Tmapped)=>(arr: T[])=>arr.map(func)
 
-export const getset = <Name extends string,T>(name: Name, getter: ()=>T, setter:(a:T)=>T): {[p in Name]: T}=>({
-  get [name]() {return getter()},
-  set [name](v: T) {setter(v)}
-}) as {[p in Name]: T}
+export const log = f(console.log)
 
 export const addChild = (child: GameObj)=>f((obj: GameObj)=>obj.add(child))
 export const addChildren = (children: GameObj[])=>f((parent: GameObj)=>map(parent.add)(children))
