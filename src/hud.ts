@@ -1,13 +1,15 @@
-import { Comp, EaseFunc } from "kaboom"
+import { Comp, EaseFunc, Vec2 } from "kaboom"
 
 const createSmooth = ({
   startAt: current = 0,
   startDist: dist = current,
   ease = easings.linear ,
+  speed = 1,
   t = 0
 }:{
   startAt?: number
   startDist?: number
+  speed?: number
   ease?: EaseFunc
   t?: number
 })=>({
@@ -15,8 +17,11 @@ const createSmooth = ({
       if ( t >= 1) return t=1
       const t0at = (current - ease(t) * dist) / ( 1 - ease(t) ) // math
       const range = dist - t0at
-      current = ease(t += dt()) * range + t0at
+      t += dt() / speed
+      current = ease(t) * range + t0at
     },
+    get speed(){ return speed },
+    set speed(v: number){ speed = v },
     get value(){ return current },
     set value(v: number){
       dist = v
@@ -27,6 +32,7 @@ const createSmooth = ({
 type smoothPosComp = Comp & {
   smoothTo: (x: number, y:number)=>void
   smoothBy: (x: number, y:number)=>void
+  speed: Vec2
 }
 export const smoothPos = (x: number, y: number, ease: EaseFunc)=>{
   const smoothX = createSmooth({ startAt: x, ease })
@@ -34,6 +40,11 @@ export const smoothPos = (x: number, y: number, ease: EaseFunc)=>{
   return [
     pos(x,y),
     {
+      get speed(){ return vec2(smoothX.speed,smoothY.speed) },
+      set speed(vec: Vec2){ 
+        smoothX.speed = vec.x
+        smoothY.speed = vec.y
+      },
       update(){
         smoothX.update()
         smoothY.update()
