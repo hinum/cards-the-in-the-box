@@ -15,5 +15,5 @@ const test = add([
   ...smoothPos(0,0,easings.easeInOutQuad)
 ])
 
-test.speed = vec2(5)
-test.smoothTo(200,100)
+test.speed = vec2(100)
+test.distPos = vec2(100,200)
