@@ -172,6 +172,7 @@ declare global {
   readonly var record: KaboomCtx["record"]
   readonly var quit: KaboomCtx["quit"]
 
+  readonly var debug: KaboomCtx["debug"]
   readonly var ASCII_CHARS: KaboomCtx["ASCII_CHARS"]
   readonly var LEFT: KaboomCtx["LEFT"]
   readonly var RIGHT: KaboomCtx["RIGHT"]

@@ -1,5 +1,5 @@
 import { Comp, EaseFunc, PosComp, Vec2 } from "kaboom"
-import { log, getset, pipe, _, __ } from "./utils"
+import { gs, Gs } from "./utils"
 
 const createSmooth = ({
   startAt: current = 0,
@@ -14,11 +14,10 @@ const createSmooth = ({
   ease?: EaseFunc
   t?: number
 })=>
-  pipe<{update: ()=>void}>()
-    (_, getset("speed", ()=>speed, v=>speed = v))
-    (_, getset("value", ()=>current, v=>current = v))
-    (_, getset("dist", ()=>dist, v=>dist = v))
     ({
+      value: gs(()=>current, v=>current = v),
+      speed: gs(()=>speed, v=>speed = v),
+      dist:  gs(()=>dist, v=>{dist = v; t = t<0.5? t: 1-t}),
       update: ()=>{
         if ( t >= 1) return t=1
         const t0at = (current - ease(t) * dist) / ( 1 - ease(t) ) // math
@@ -26,49 +25,46 @@ const createSmooth = ({
         t += dt() / speed
         current = ease(t) * range + t0at
       },
-    }, __)
+    })
 
-type RawSmoothPosComp = Comp & {
+export type SmoothPosComp = Comp & {
+  speed: Gs<number>
+  dPos: Gs<Vec2>
   smoothTo: (x: number, y:number)=>void
   smoothBy: (x: number, y:number)=>void
 }
-type SmoothPosComp = RawSmoothPosComp & {
-  speed: Vec2
-  distPos: Vec2
-}
-export const smoothPos = (x: number, y: number, ease: EaseFunc): [PosComp, SmoothPosComp]=>{
+export const smoothPos = (x: number, y: number, ease = easings.linear): [PosComp, SmoothPosComp]=>{
   const smoothX = createSmooth({ startAt: x, ease })
   const smoothY = createSmooth({ startAt: y, ease })
   return [
     pos(x,y),
-    pipe<RawSmoothPosComp>()
-      (_, getset("speed", 
-        ()=>vec2(smoothX.speed, smoothY.speed),
+    {
+      speed: gs(
+        ()=>smoothX.speed.g(),
         ve=>{
-          smoothX.speed = ve.x
-          smoothY.speed = ve.y
-        }))
-      (_, getset("distPos",
-        ()=>vec2(smoothX.dist, smoothY.dist),
+          smoothX.speed.s(ve)
+          smoothY.speed.s(ve)
+        }),
+      dPos : gs(
+        ()=>vec2(smoothX.dist.g(), smoothY.dist.g()),
         ve=>{
-          smoothX.dist = ve.x
-          smoothY.dist = ve.y
-        }))
-      ({
-        update(){
-          smoothX.update()
-          smoothY.update()
-          this.moveTo(smoothX.value, smoothY.value)
-        },
-        smoothTo(x, y) {
-          smoothX.dist = x
-          smoothY.dist = y
-        },
-        smoothBy(x, y) {
-          smoothX.dist += x
-          smoothY.dist += y
-        },
-      },__)
+          smoothX.dist.s(ve.x)
+          smoothY.dist.s(ve.y)
+        }),
+      update(){
+        smoothX.update()
+        smoothY.update()
+        this.moveTo(smoothX.value.g(), smoothY.value.g())
+      },
+      smoothTo(x, y) {
+        smoothX.dist.s(x)
+        smoothY.dist.s(y)
+      },
+      smoothBy(x, y) {
+        smoothX.dist.s(x)
+        smoothY.dist.s(y)
+      },
+    }
   ]
 }
 
