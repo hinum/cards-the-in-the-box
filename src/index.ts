@@ -1,9 +1,29 @@
 import kaboom from "kaboom";
-import { smoothPos } from "./hud";
+import { smoothPos } from "./smooth";
 import { addChild } from "./utils";
 
 const WIDTH = 16*24
 const HEIGHT = 16*13.5
+
+// assets
+loadRoot("asset")
+loadSpriteAtlas("cardMask.png",{
+  cardFront: {
+    x: 0, y: 0,
+    width: 32,
+    height: 48,
+  },
+  cardMask: {
+    x:32, y: 0,
+    width: 32,
+    height: 48,
+  },
+  resultFront: {
+    x:64, y: 0,
+    width: 64,
+    height: 48,
+  }
+})
 
 kaboom({
   width: WIDTH,
