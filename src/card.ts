@@ -1,4 +1,4 @@
-import { Color } from "kaboom"
+import { Color, PosComp, GameObj, AreaComp } from "kaboom"
 import { Entity } from "./entity"
 import { smoothOpacity, smoothPos } from "./smooth"
 import { addChild, addChildren, addNamedChildren, gs, temText } from "./utils"
@@ -11,7 +11,7 @@ type CardResult = {
   description: string
   type: CardType
   
-  onActive: ()=>{} //TODO
+  onActive: ()=>void //TODO
 }
 
 export type Card = UnplayedCard | PlayedCard
@@ -29,7 +29,7 @@ export type PlayedCard = UnplayedCard & {
 const decideBackColor = (type: CardType): Color=>{
   switch(type){
     case "atk": return rgb(255,0,0)
-    case "def": return rgb(0,0,255)
+    case "def": return rgb(0,255,255)
   }
 }
 
@@ -39,48 +39,59 @@ export const createCardSprite = (results: CardResult[])=>{
 
   let isFocusable = true
   const focus = (index: number)=>{
-    resultCon.smoothTo(0, index * -hPerResult)
-    resultSprites.slice(index).forEach(o=>o.result.smoothTo(0, 48))
+    resultSprites.slice(0,index+1).forEach(o=>o.inSprite.smoothBy(0, -index* hPerResult))
+    resultSprites.slice(  index-1).forEach(o=>o.inSprite.smoothBy(0, (results.length-index-1)* hPerResult))
+    resultSprites[index].inSprite.description.smoothShow()
   }
   const unfocus = ()=>{
-    resultCon.smoothTo(0,0)
-    resultSprites.forEach(o=>o.result.smoothTo(0,0))
+    resultSprites.forEach(o=>{
+      o.inSprite.smoothTo(-32,0)
+      o.inSprite.description.smoothHide()
+    })
   }
 
   const resultSprites = 
     results.map(
-      (result,index)=>
-        addNamedChildren({
-          result: addNamedChildren({
-            heading: make([ ...temText(result.name, {}), pos(0,-8) ]),
-            backgroud: make([
-              pos(randi(0,32)-3,-12),
-              color(decideBackColor(result.type)),
-              sprite("resultFront"),
-              {update() {
-                this.moveBy(index % 2? -1: dt(), 0)
-                if (this.pos.x < 0) this.moveTo(32,0)
-                if (this.pos.x >64) this.moveTo(64,0)
-              }}
-            ]),
-            description: make([
-              pos(3,11),
-              ...temText(result.description, {}),
-              ...smoothOpacity(0),
-            ])
-          })(make(smoothPos(0,0)))
-        })(make([
-          rect(32, hPerResult, { fill: false }),
-          pos(index* hPerResult),
-          area({ collisionIgnore: ["*"] }),
-          {add() {
-            this.onHover(()=>isFocusable && focus(index))
-            this.onHoverEnd(()=>isFocusable && unfocus())
+      (result,index)=>{
+        const heading = make([
+          ...temText(result.name, {}),
+          pos(3,3), z(999)
+        ])
+        const backgroud = make([
+          pos(randi(0,32),0),
+          color(decideBackColor(result.type)),
+          sprite("resultFront"),
+          {update(this: GameObj<PosComp>) {
+            this.moveBy(index % 2? -dt()*8: dt()*8, 0)
+            if (this.pos.x < 0) this.moveTo(32,0)
+            if (this.pos.x >32) this.moveTo(0,0)
           }}
-        ])))
+        ])
+        const description = make([
+          pos(3,11),
+          ...temText(result.description, {}),
+          ...smoothOpacity(0),
+        ])
+        const inSprite = addChildren([
+          heading, description, backgroud
+        ])(make([
+            ...smoothPos(-32,0),
+            { description }
+          ]))
+        return addChild(inSprite)(make([
+          pos(0,index* hPerResult),
+          rect(32,hPerResult,{fill: false}),
+          area({ collisionIgnore: ["*"] }),
+          {
+            add( this: GameObj<AreaComp> ) {
+              this.onHover(()=>isFocusable && focus(index))
+              this.onHoverEnd(()=>isFocusable && unfocus())
+            }, inSprite
+          }
+        ]))
+    })
 
-  const resultCon = addChildren(resultSprites)(make(smoothPos(0,0)))
-  const resultMask = addChild(resultCon)(make([
+  const resultMask = addChildren(resultSprites)(make([
     mask("intersect"),
     sprite("cardMask"),
   ]))

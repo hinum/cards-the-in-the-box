@@ -24,7 +24,7 @@ export const gs = <T>(g: ()=>T, s:(v:T)=>any): Gs<T>=>({g,s})
 export const log = f(console.log)
 
 export const addChild = (child: GameObj)=>f((obj: GameObj)=>obj.add(child))
-export const addChildren = (children: GameObj[])=>f((parent: GameObj)=>mapf(parent.add)(children))
+export const addChildren = (children: GameObj[])=>f((parent: GameObj)=>mapf((o: GameObj)=>parent.add(o))(children))
 /*
  * if add named children breaks
  * try change the spread at the end to Object.assign
@@ -46,7 +46,6 @@ export const temText =
       size: 4,
       letterSpacing: -1,
       width: 32-6,
-      font: "Arial",
       ...opt
     }),
   ]

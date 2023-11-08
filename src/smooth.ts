@@ -1,5 +1,5 @@
-import { Comp, EaseFunc, OpacityComp, PosComp, Vec2 } from "kaboom"
-import { gs, Gs, save,mapf } from "./utils"
+import { Comp, EaseFunc, OpacityComp, PosComp, Vec2, GameObj } from "kaboom"
+import { gs, Gs, save, mapf } from "./utils"
 
 type SmoothObj = ReturnType<typeof createSmooth>
 const createSmooth = ({
@@ -39,40 +39,34 @@ export type SmoothPosComp = Comp & {
 export const smoothPos = (x: number, y: number, ease = easings.easeInOutQuad): [PosComp, SmoothPosComp]=>{
   const smoothX = createSmooth({ startAt: x, ease })
   const smoothY = createSmooth({ startAt: y, ease })
-  const mapTo = <out = any>()=>save((fn: (o:SmoothObj)=>out)=>mapf(fn)([smoothX,smoothY]))
+  const mapTo = save((fn: (o:SmoothObj)=>any)=>mapf(fn)([smoothX,smoothY]))
   return [
     pos(x,y),
     {
       id: "smoothPos",
       speed: gs(
         ()=>smoothX.speed.g(),
-        ve=>mapTo()(o=>o.speed.s(ve))),
+        ve=>mapTo(o=>o.speed.s(ve))),
       dPos : gs(
         ()=>vec2(smoothX.dist.g(), smoothY.dist.g()),
         ve=>{
           smoothX.dist.s(ve.x)
           smoothY.dist.s(ve.y)
         }),
-      update(){
-        smoothX.update()
-        smoothY.update()
+      update(this: GameObj<PosComp>){
+        mapTo(o=>o.update())
         this.moveTo(smoothX.value.g(), smoothY.value.g())
       },
-      smoothTo(x, y, speed = smoothX.speed.g()) {
-        smoothX.dist.s(x)
-        smoothY.dist.s(y)
-        mapTo()(o=>{
-          o.speed.s(speed)
-          o.play()
-        })
+      smoothBy(x, y, speed) {
+        this.smoothTo(
+          x + smoothX.dist.g(),
+          y + smoothY.dist.g(),
+        speed) 
       },
-      smoothBy(x, y, speed = smoothX.speed.g()) {
-        smoothX.dist.s(x)
-        smoothY.dist.s(y)
-        mapTo()(o=>{
-          o.speed.s(speed)
-          o.play()
-        })
+      smoothTo(x, y, speed = smoothX.speed.g()) {
+        this.dPos.s(vec2(x,y))
+        this.speed.s(speed)
+        mapTo(o=>o.play())
       },
     }
   ]
@@ -88,7 +82,7 @@ export const smoothOpacity = (opac: number, ease= easings.easeInOutQuad):[Opacit
     opacity(opac),
     {
       id: "smoothOpacity",
-      update(){
+      update(this: GameObj<OpacityComp>){
         opacitySmooth.update()
         this.opacity = opacitySmooth.value.g()
       },

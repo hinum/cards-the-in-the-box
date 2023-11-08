@@ -1,12 +1,17 @@
 import kaboom from "kaboom";
-import { smoothPos } from "./smooth";
-import { addChild } from "./utils";
+import { createCardSprite } from "./card";
 
 const WIDTH = 16*24
 const HEIGHT = 16*13.5
 
+kaboom({
+  width: WIDTH,
+  height: HEIGHT,
+  scale: innerWidth/WIDTH
+})
+
 // assets
-loadRoot("asset")
+loadRoot("assets/")
 loadSpriteAtlas("cardMask.png",{
   cardFront: {
     x: 0, y: 0,
@@ -25,17 +30,18 @@ loadSpriteAtlas("cardMask.png",{
   }
 })
 
-kaboom({
-  width: WIDTH,
-  height: HEIGHT,
-  scale: innerWidth/WIDTH
-})
+const card = createCardSprite([
+  {
+    name: "test",
+    description: "t3sting",
+    type: "atk",
+    onActive: ()=>{},
+  },{
+    name: "test",
+    description: "t3sting",
+    type: "def",
+    onActive: ()=>{},
+  }
+])
 
-const test = 
-  addChild
-    (make([rect(100,100)]))
-    (add(smoothPos(0,0,easings.easeInOutQuad)))
-
-test.speed.s(5)
-test.dPos.s(vec2(200,100))
-console.log(test.dPos.g())
+add(card.sprite)
