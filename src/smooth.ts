@@ -19,7 +19,8 @@ const createSmooth = ({
     t: gs(()=>t, v=>t=v),
     value: gs(()=>current, v=>current = v),
     speed: gs(()=>speed, v=>speed = v),
-    dist:  gs(()=>dist, v=>{dist = v; t = t<0.5? t: 1-t}),
+    dist:  gs(()=>dist, v=>dist = v),
+    play: ()=>t = t<0.5? t: 1-t,
     update: ()=>{
       if ( t >= 1) return t=1
       const t0at = (current - ease(t) * dist) / ( 1 - ease(t) ) // math
@@ -32,16 +33,17 @@ const createSmooth = ({
 export type SmoothPosComp = Comp & {
   speed: Gs<number>
   dPos: Gs<Vec2>
-  smoothTo: (x: number, y:number, speed: number)=>void,
-  smoothBy: (x: number, y:number, speed: number)=>void
+  smoothTo: (x: number, y:number, speed?: number)=>void,
+  smoothBy: (x: number, y:number, speed?: number)=>void
 }
-export const smoothPos = (x: number, y: number, ease = easings.linear): [PosComp, SmoothPosComp]=>{
+export const smoothPos = (x: number, y: number, ease = easings.easeInOutQuad): [PosComp, SmoothPosComp]=>{
   const smoothX = createSmooth({ startAt: x, ease })
   const smoothY = createSmooth({ startAt: y, ease })
   const mapTo = <out = any>()=>save((fn: (o:SmoothObj)=>out)=>mapf(fn)([smoothX,smoothY]))
   return [
     pos(x,y),
     {
+      id: "smoothPos",
       speed: gs(
         ()=>smoothX.speed.g(),
         ve=>mapTo()(o=>o.speed.s(ve))),
@@ -59,37 +61,46 @@ export const smoothPos = (x: number, y: number, ease = easings.linear): [PosComp
       smoothTo(x, y, speed = smoothX.speed.g()) {
         smoothX.dist.s(x)
         smoothY.dist.s(y)
-        mapTo()(o=>o.speed.s(speed))
+        mapTo()(o=>{
+          o.speed.s(speed)
+          o.play()
+        })
       },
       smoothBy(x, y, speed = smoothX.speed.g()) {
         smoothX.dist.s(x)
         smoothY.dist.s(y)
-        mapTo()(o=>o.speed.s(speed))
+        mapTo()(o=>{
+          o.speed.s(speed)
+          o.play()
+        })
       },
     }
   ]
 }
 
 export type SmoothOpacityComp = Comp & {
-  smoothHide: (speed: number)=>void,
-  smoothShow: (speed: number)=>void
+  smoothHide: (speed?: number)=>void,
+  smoothShow: (speed?: number)=>void
 }
-export const smoothOpacity = (opac: number, ease= easings.linear):[OpacityComp, SmoothOpacityComp]=>{
+export const smoothOpacity = (opac: number, ease= easings.easeInOutQuad):[OpacityComp, SmoothOpacityComp]=>{
   const opacitySmooth = createSmooth({ startAt: opac, ease})
   return [
     opacity(opac),
     {
+      id: "smoothOpacity",
       update(){
         opacitySmooth.update()
         this.opacity = opacitySmooth.value.g()
       },
-      smoothHide: (speed)=>{
+      smoothHide: (speed = opacitySmooth.speed.g())=>{
         opacitySmooth.dist.s(0)
         opacitySmooth.speed.s(speed)
+        opacitySmooth.play()
       },
-      smoothShow: (speed)=>{
+      smoothShow: (speed = opacitySmooth.speed.g())=>{
         opacitySmooth.dist.s(1)
         opacitySmooth.speed.s(speed)
+        opacitySmooth.play()
       }
     }
   ]
