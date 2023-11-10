@@ -1,4 +1,4 @@
-import { Color, GameObj, PosComp, TextCompOpt, Vec2 } from "kaboom"
+import { GameObj, PosComp, TextCompOpt, Vec2 } from "kaboom"
 import { SmoothPosComp } from "./smooth"
 
 type pipe<T,last> = <next, Inp extends T | undefined>(inp: Inp,fn: (a:last)=>next)=>Inp extends T? last: pipe<T,next>

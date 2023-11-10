@@ -13,7 +13,7 @@ kaboom({
 
 // assets
 loadRoot("assets/")
-loadSpriteAtlas("cardMask.png",{
+loadSpriteAtlas("card.png",{
   cardFront: {
     x: 0, y: 0,
     width: 32,

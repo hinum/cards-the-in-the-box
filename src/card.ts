@@ -1,7 +1,7 @@
 import { Color, PosComp, GameObj, AreaComp } from "kaboom"
 import { Entity } from "./entity"
 import { smoothOpacity, smoothPos } from "./smooth"
-import { addChild, addChildren, gs, log, temText } from "./utils"
+import { addChild, addChildren, gs, temText } from "./utils"
 
 type CardType =
   | "atk"
@@ -102,6 +102,7 @@ export const createCardSprite = (results: CardResult[])=>{
     isFocusable: gs(()=>isFocusable, v=>isFocusable = v),
     sprite: addChildren([
       resultMask,
+      make([sprite("cardMask"),z(999)])
     ])(make([
       ...smoothPos(0,0),
       sprite("cardFront")
