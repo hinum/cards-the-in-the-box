@@ -31,21 +31,17 @@ export const addChildren = (children: GameObj[])=>f((parent: GameObj)=>mapf((o: 
 */
 export const addNamedChildren = <struct extends Record<string, GameObj>>(children: struct)=><T extends GameObj>(parent: T): T & struct=>({...addChildren(Object.values(children))(parent), ...children})
 
-const containSmoothPos = (v: any): v is GameObj<SmoothPosComp>=>v.c("smoothPos")
-export const moveTo = (where: Vec2)=>f((obj: GameObj<PosComp> | GameObj<PosComp | SmoothPosComp>)=>{
-  obj.moveTo(where)
-  if (containSmoothPos(obj)) obj.dPos.s(where)
-})
-export const moveBy = (where: Vec2)=>f((obj: GameObj<PosComp> | GameObj<PosComp | SmoothPosComp>)=>moveTo(obj.pos.add(where))(obj))
+export const moveTo = (where: Vec2)=>f((obj: GameObj<PosComp>)=>obj.moveTo(where))
+export const moveBy = (where: Vec2)=>f((obj: GameObj<PosComp>)=>obj.moveBy(where))
 export const smoothTo = (where: Vec2, speed?: number)=>f((obj: GameObj<SmoothPosComp>)=>obj.smoothTo(where.x, where.y, speed))
 export const smoothBy = (where: Vec2, speed?: number)=>f((obj: GameObj<SmoothPosComp>)=>obj.smoothBy(where.x, where.y, speed))
 export const temText = 
-  (txt: string, opt: TextCompOpt & { color?: Color})=>[
-    color( opt.color ?? WHITE),
+  (txt: string, opt: TextCompOpt = {})=>
     text(txt, {
-      size: 4,
-      letterSpacing: -1,
-      width: 32-6,
+      letterSpacing: -0.5,
+      font: "Arial",
+      align: "left",
+      size: 6,
       ...opt
-    }),
-  ]
+    })
+  

@@ -1,5 +1,6 @@
 import kaboom from "kaboom";
 import { createCardSprite } from "./card";
+import { smoothTo } from "./utils";
 
 const WIDTH = 16*24
 const HEIGHT = 16*13.5
@@ -44,4 +45,4 @@ const card = createCardSprite([
   }
 ])
 
-add(card.sprite)
+add(smoothTo(vec2(100,100))(card.sprite))

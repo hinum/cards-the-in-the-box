@@ -1,7 +1,7 @@
 import { Color, PosComp, GameObj, AreaComp } from "kaboom"
 import { Entity } from "./entity"
 import { smoothOpacity, smoothPos } from "./smooth"
-import { addChild, addChildren, addNamedChildren, gs, temText } from "./utils"
+import { addChild, addChildren, gs, log, temText } from "./utils"
 
 type CardType =
   | "atk"
@@ -54,8 +54,8 @@ export const createCardSprite = (results: CardResult[])=>{
     results.map(
       (result,index)=>{
         const heading = make([
-          ...temText(result.name, {}),
-          pos(3,3), z(999)
+          temText(result.name),
+          pos(35,3), z(999),
         ])
         const backgroud = make([
           pos(randi(0,32),0),
@@ -68,8 +68,8 @@ export const createCardSprite = (results: CardResult[])=>{
           }}
         ])
         const description = make([
-          pos(3,11),
-          ...temText(result.description, {}),
+          pos(35,11),z(999),
+          temText(result.description, { size: 4 }),
           ...smoothOpacity(0),
         ])
         const inSprite = addChildren([
@@ -79,7 +79,7 @@ export const createCardSprite = (results: CardResult[])=>{
             { description }
           ]))
         return addChild(inSprite)(make([
-          pos(0,index* hPerResult),
+          pos(-1,index* hPerResult-2),
           rect(32,hPerResult,{fill: false}),
           area({ collisionIgnore: ["*"] }),
           {
@@ -93,13 +93,16 @@ export const createCardSprite = (results: CardResult[])=>{
 
   const resultMask = addChildren(resultSprites)(make([
     mask("intersect"),
-    sprite("cardMask"),
+    rect(30,46),
+    pos(1,1)
   ]))
 
   return {
     focus, unfocus,
     isFocusable: gs(()=>isFocusable, v=>isFocusable = v),
-    sprite: addChild(resultMask)(make([
+    sprite: addChildren([
+      resultMask,
+    ])(make([
       ...smoothPos(0,0),
       sprite("cardFront")
     ]))
