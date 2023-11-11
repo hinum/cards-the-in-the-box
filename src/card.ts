@@ -1,7 +1,8 @@
-import { Color, PosComp, GameObj, AreaComp } from "kaboom"
+import { Color, PosComp, GameObj, AreaComp, Vec2 } from "kaboom"
 import { Entity } from "./entity"
 import { smoothOpacity, smoothPos } from "./smooth"
-import { addChild, addChildren, gs, temText } from "./utils"
+import { addChild, addChildren, goTo, gs, ncheck, smoothTo, temText, ucheck } from "./utils"
+import { oneArea } from "./area"
 
 type CardType =
   | "atk"
@@ -11,19 +12,12 @@ type CardResult = {
   description: string
   type: CardType
   
-  onActive: ()=>void //TODO
+  onActive: (game: any, caster: Entity, target: Entity)=>void //TODO
 }
 
-export type Card = UnplayedCard | PlayedCard
-export type UnplayedCard = {
-  faces: CardResult[]
+export type Card = {
+  results: CardResult[]
   sprite: CardSprite
-}
-export type PlayedCard = UnplayedCard & {
-  result: CardResult
-  
-  target: Entity
-  caster: Entity
 }
 
 const decideBackColor = (type: CardType): Color=>{
@@ -34,18 +28,18 @@ const decideBackColor = (type: CardType): Color=>{
 }
 
 type CardSprite = ReturnType<typeof createCardSprite>
-export const createCardSprite = (results: CardResult[])=>{
+const createCardSprite = (results: CardResult[])=>{
   const hPerResult = 48/results.length
 
   let isFocusable = true
-  const focus = (index: number)=>{
-    resultSprites.slice(0,index+1).forEach(o=>o.inSprite.smoothBy(0, -index* hPerResult))
-    resultSprites.slice(  index-1).forEach(o=>o.inSprite.smoothBy(0, (results.length-index-1)* hPerResult))
-    resultSprites[index].inSprite.description.smoothShow()
+  const focus = (index: number, speed = 1)=>{
+    resultSprites.slice(0,index+1).forEach(o=>o.inSprite.smoothBy(vec2(0, -index* hPerResult), speed))
+    resultSprites.slice(  index-1).forEach(o=>o.inSprite.smoothBy(vec2(0, (results.length-index-1)* hPerResult), speed))
+    resultSprites[index].inSprite.description.smoothShow(speed)
   }
   const unfocus = ()=>{
     resultSprites.forEach(o=>{
-      o.inSprite.smoothTo(-32,0)
+      o.inSprite.smoothTo(vec2(-32,0))
       o.inSprite.description.smoothHide()
     })
   }
@@ -105,10 +99,44 @@ export const createCardSprite = (results: CardResult[])=>{
       make([sprite("cardMask"),z(999)])
     ])(make([
       ...smoothPos(0,0),
+      oneArea(),area(),
       sprite("cardFront")
     ]))
   }
 }
+
+export const createCard = (results: CardResult[]): Card=>({
+  results, sprite: createCardSprite(results)
+})
+
+const stillCardSpacing = 16
+export const createCardRow = (vec: Vec2)=>({
+  onPick: (_: Card)=>{},
+  sprite: make(smoothPos(vec.x, vec.y)),
+
+  addCard(card: Card){
+    const traverse = (obj: GameObj)=>obj.children.length === 0? obj: obj.children[0]
+    const { sprite: { sprite } } = card
+    traverse(this.sprite).add(sprite)
+    sprite.goTo(vec2(stillCardSpacing,0))
+    sprite.hover = ()=>{}
+    sprite.click = ()=>this.onPick(card)
+  },
+  removeCard({ sprite: {sprite} }: Card){
+    const [cardChild] = sprite.children as CardSprite["sprite"][]
+    goTo(sprite.pos.add(stillCardSpacing,0))(cardChild)
+    smoothTo(sprite.pos)(cardChild)
+    ncheck(sprite.parent).add(cardChild)
+    destroy(sprite)
+  },
+})
+
+
+
+
+
+
+
 
 
 

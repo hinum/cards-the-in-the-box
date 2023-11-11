@@ -31,10 +31,11 @@ const createSmooth = ({
   })
 
 export type SmoothPosComp = Comp & {
-  speed: Gs<number>
-  dPos: Gs<Vec2>
-  smoothTo: (x: number, y:number, speed?: number)=>void,
-  smoothBy: (x: number, y:number, speed?: number)=>void
+  readonly speed: Gs<number>
+  readonly dPos: Gs<Vec2>
+  readonly smoothTo: (v: Vec2, speed?: number)=>void,
+  readonly smoothBy: (v: Vec2, speed?: number)=>void
+  readonly goTo: (this: GameObj<SmoothPosComp & PosComp>,v: Vec2)=>void
 }
 export const smoothPos = (x: number, y: number, ease = easings.easeInOutQuad): [PosComp, SmoothPosComp]=>{
   const smoothX = createSmooth({ startAt: x, ease })
@@ -57,24 +58,28 @@ export const smoothPos = (x: number, y: number, ease = easings.easeInOutQuad): [
         mapTo(o=>o.update())
         this.moveTo(smoothX.value.g(), smoothY.value.g())
       },
-      smoothBy(x, y, speed) {
-        this.smoothTo(
-          x + smoothX.dist.g(),
-          y + smoothY.dist.g(),
-        speed) 
+      smoothBy(ve, speed) {
+        this.smoothTo(ve.add(this.dPos.g()), speed)
       },
-      smoothTo(x, y, speed = smoothX.speed.g()) {
-        this.dPos.s(vec2(x,y))
+      smoothTo(ve, speed = smoothX.speed.g()) {
+        this.dPos.s(ve)
         this.speed.s(speed)
         mapTo(o=>o.play())
       },
+      goTo(ve){
+        this.dPos.s(ve)
+        this.moveTo(ve)
+        smoothX.value.s(ve.x)
+        smoothY.value.s(ve.y)
+        mapTo(o=>o.t.s(1))
+      }
     }
   ]
 }
 
 export type SmoothOpacityComp = Comp & {
-  smoothHide: (speed?: number)=>void,
-  smoothShow: (speed?: number)=>void
+  readonly smoothHide: (speed?: number)=>void,
+  readonly smoothShow: (speed?: number)=>void
 }
 export const smoothOpacity = (opac: number, ease= easings.easeInOutQuad):[OpacityComp, SmoothOpacityComp]=>{
   const opacitySmooth = createSmooth({ startAt: opac, ease})

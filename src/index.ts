@@ -1,9 +1,9 @@
 import kaboom from "kaboom";
-import { createCardSprite } from "./card";
-import { smoothTo } from "./utils";
+import { createCard, createCardRow } from "./card";
+import { makeArray, goTo, moveTo, smoothTo, mapf } from "./utils";
 
-const WIDTH = 16*24
-const HEIGHT = 16*13.5
+const WIDTH = 16*16
+const HEIGHT = 16*9
 
 kaboom({
   width: WIDTH,
@@ -31,7 +31,7 @@ loadSpriteAtlas("card.png",{
   }
 })
 
-const card = createCardSprite([
+const card = makeArray(7,()=>createCard([
   {
     name: "test",
     description: "t3sting",
@@ -43,6 +43,14 @@ const card = createCardSprite([
     type: "def",
     onActive: ()=>{},
   }
-])
+]))
 
-add(smoothTo(vec2(100,100))(card.sprite))
+const cardRow = createCardRow(vec2(20,20))
+add(cardRow.sprite)
+card.forEach(o=>cardRow.addCard(o))
+cardRow.onPick = cardRow.removeCard
+
+
+
+
+
