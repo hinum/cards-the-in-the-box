@@ -21,6 +21,7 @@ export type SmoothPosComp = Comp & {
   dPos: Vec2,
   smootherX: ReturnType<typeof createSmooth>
   smootherY: ReturnType<typeof createSmooth>
+  play: ()=>void,
   goTo: (this: GameObj<SmoothPosComp & PosComp>, vec: Vec2)=>void
 }
 export const smoothPos = (vec: Vec2, ease=easings.easeInOutQuad): SmoothPosComp=>({
@@ -50,6 +51,10 @@ export const smoothPos = (vec: Vec2, ease=easings.easeInOutQuad): SmoothPosComp=
     this.moveTo(vec)
     this.smootherX.t = 1
     this.smootherY.t = 1
+  },
+  play(){
+    this.smootherX.t = this.smootherX.t < 0.5? this.smootherX.t: 1-this.smootherX.t
+    this.smootherY.t = this.smootherY.t < 0.5? this.smootherY.t: 1-this.smootherY.t
   },
   set dPos(v){
     this.smootherX.current = v.x
