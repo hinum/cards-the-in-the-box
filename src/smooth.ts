@@ -1,4 +1,3 @@
-import { create } from "domain"
 import { Comp, GameObj, PosComp, Vec2 } from "kaboom"
 
 const createSmooth = (opt:{
@@ -22,6 +21,8 @@ export type SmoothPosComp = Comp & {
   smootherX: ReturnType<typeof createSmooth>
   smootherY: ReturnType<typeof createSmooth>
   play: ()=>void,
+  smoothBy: (vec: Vec2)=>void
+  smoothTo: (vec: Vec2)=>void
   goTo: (this: GameObj<SmoothPosComp & PosComp>, vec: Vec2)=>void
 }
 export const smoothPos = (vec: Vec2, ease=easings.easeInOutQuad): SmoothPosComp=>({
@@ -65,5 +66,31 @@ export const smoothPos = (vec: Vec2, ease=easings.easeInOutQuad): SmoothPosComp=
       this.smootherX.current,
       this.smootherY.current,
     )
+  },
+  smoothTo(ve){
+    this.dPos = ve
+    this.play()
+  },
+  smoothBy(ve){
+    this.dPos = this.dPos.add(ve)
+    this.play()
   }
+})
+
+export type SmoothOpacity = Comp & {
+  smootherOpac: ReturnType<typeof createSmooth>
+  smoothOpac: (opacity: number)=>void
+}
+export const smoothOpacity = (opac: number, ease = easings.easeInOutQuad): SmoothOpacity=>({
+  smootherOpac: createSmooth({
+    current: opac,
+    dist: opac, t:1, ease
+  }),
+  update() {
+    this.smootherOpac.update()
+  },
+  smoothOpac(opacity) {
+    this.smootherOpac.dist = opacity
+    this.smootherOpac.t = this.smootherOpac.t < 0.5? this.smootherOpac.t: 1-this.smootherOpac.t
+  },
 })
