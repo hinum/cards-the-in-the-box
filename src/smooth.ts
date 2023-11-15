@@ -1,4 +1,4 @@
-import { Comp, GameObj, PosComp, Vec2 } from "kaboom"
+import { Comp, GameObj, OpacityComp, PosComp, Vec2 } from "kaboom"
 
 const createSmooth = (opt:{
   current: number,
@@ -9,8 +9,8 @@ const createSmooth = (opt:{
     update(){
       const {t, current, dist, ease} = this
       if ( t >= 1 ) return this.t = 1
-      const t0at = (current - dist*ease(t)) / (ease(t) + 1)
-      const range = dist + t0at
+      const t0at = (current - ease(t)*dist) / (1 - ease(t))
+      const range = dist - t0at
       this.t += dt()
       this.current = ease(t + dt()) * range + t0at
     }, ...opt
@@ -20,7 +20,7 @@ export type SmoothPosComp = Comp & {
   dPos: Vec2,
   smootherX: ReturnType<typeof createSmooth>
   smootherY: ReturnType<typeof createSmooth>
-  play: ()=>void,
+  run: ()=>void,
   smoothBy: (vec: Vec2)=>void
   smoothTo: (vec: Vec2)=>void
   goTo: (this: GameObj<SmoothPosComp & PosComp>, vec: Vec2)=>void
@@ -31,16 +31,14 @@ export const smoothPos = (vec: Vec2, ease=easings.easeInOutQuad): SmoothPosComp=
   smootherX: createSmooth({
     current: vec.x,
     dist: vec.x,
-    t: 0, ease
+    t: 1, ease
   }),
   smootherY: createSmooth({
     current: vec.y,
     dist: vec.y,
-    t: 0, ease
+    t: 1, ease
   }),
   update(this: GameObj<PosComp & SmoothPosComp>){
-    this.smootherX.current = this.pos.x
-    this.smootherY.current = this.pos.y
     this.smootherX.update()
     this.smootherY.update()
     this.moveTo(
@@ -50,30 +48,33 @@ export const smoothPos = (vec: Vec2, ease=easings.easeInOutQuad): SmoothPosComp=
   },
   goTo(vec){
     this.moveTo(vec)
+    this.smootherX.current = vec.x
+    this.smootherY.current = vec.y
+    this.dPos = vec
     this.smootherX.t = 1
     this.smootherY.t = 1
   },
-  play(){
+  run(){
     this.smootherX.t = this.smootherX.t < 0.5? this.smootherX.t: 1-this.smootherX.t
     this.smootherY.t = this.smootherY.t < 0.5? this.smootherY.t: 1-this.smootherY.t
   },
   set dPos(v){
-    this.smootherX.current = v.x
-    this.smootherY.current = v.y
+    this.smootherX.dist = v.x
+    this.smootherY.dist = v.y
   },
   get dPos(){
     return vec2(
-      this.smootherX.current,
-      this.smootherY.current,
+      this.smootherX.dist,
+      this.smootherY.dist,
     )
   },
   smoothTo(ve){
     this.dPos = ve
-    this.play()
+    this.run()
   },
   smoothBy(ve){
     this.dPos = this.dPos.add(ve)
-    this.play()
+    this.run()
   }
 })
 
@@ -86,8 +87,9 @@ export const smoothOpacity = (opac: number, ease = easings.easeInOutQuad): Smoot
     current: opac,
     dist: opac, t:1, ease
   }),
-  update() {
+  update(this: GameObj<SmoothOpacity & OpacityComp>) {
     this.smootherOpac.update()
+    this.opacity = this.smootherOpac.current
   },
   smoothOpac(opacity) {
     this.smootherOpac.dist = opacity
